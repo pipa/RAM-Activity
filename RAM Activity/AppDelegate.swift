@@ -12,29 +12,36 @@ import Cocoa
 class AppDelegate: NSObject, NSApplicationDelegate {
 
     @IBOutlet weak var window: NSWindow!
-    @IBOutlet weak var statusMenu: NSMenu!
     
-    // Items used as labels
-    @IBOutlet weak var freeLabel: NSMenuItem!
-    @IBOutlet weak var usedLabel: NSMenuItem!
+    var statusBar = NSStatusBar.systemStatusBar()
+    var statusBarItem : NSStatusItem = NSStatusItem()
+    var menu: NSMenu = NSMenu()
+    var menuItem : NSMenuItem = NSMenuItem()
     
-    let statusItem = NSStatusBar.systemStatusBar().statusItemWithLength(-2)
+    // let statusItem = NSStatusBar.systemStatusBar().statusItemWithLength(-2)
 
     func applicationDidFinishLaunching(aNotification: NSNotification?) {
         let icon = NSImage(named: "menuIcon")
         icon.setTemplate(true)
         
-        statusItem.image = icon
-        statusItem.menu = statusMenu
+        // statusItem.image = icon
+        // statusItem.menu = statusMenu
+        // Add statusBarItem
+        statusBarItem = statusBar.statusItemWithLength(-1)
+        statusBarItem.menu = menu
+        statusBarItem.title = "Memory"
         
-        refreshValues()
+        // Add menuItem to menu
+        menuItem.title = "Used"
+        menuItem.action = Selector("setWindowVisible:")
+        menuItem.keyEquivalent = ""
+        menu.addItem(menuItem)
+        
+        // Create a scheduled timer to run `refreshValues` every 2 seconds
+        var timer = NSTimer.scheduledTimerWithTimeInterval(2, target: self, selector: Selector("refreshValues"), userInfo: nil, repeats: true)
     }
 
-    @IBAction func refreshAction(sender: AnyObject) {
-        refreshValues()
-    }
-
-    func refreshValues() -> (used:String, free:String) {
+    func refreshValues() {
         var response:(used:String, free:String) = (used: "Unknown Used", free: "Unknown Free")
 
         let buildTask = NSTask()
@@ -57,12 +64,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 response.free = tmp[1] as String
             }
         }
-        freeLabel.title = "\(response.free) Free"
-        usedLabel.title = "\(response.used) Used"
-        // statusItem.title = response.used.stringByReplacingOccurrencesOfString("M", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
-
-        return response
+        println(1)
+        statusBarItem.title = "\(response.used) Used"
     }
-    
+ 
+    func setWindowVisible(sender: AnyObject){
+        self.window!.orderFront(self)
+    }
 }
 
