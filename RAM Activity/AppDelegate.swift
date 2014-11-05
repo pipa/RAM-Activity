@@ -15,27 +15,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     var statusBar = NSStatusBar.systemStatusBar()
     var statusBarItem : NSStatusItem = NSStatusItem()
-    var menu: NSMenu = NSMenu()
-    var menuItem : NSMenuItem = NSMenuItem()
+    var menu: NSMenu = NSMenu(title: "Memory")
+    var menuUsedItem : NSMenuItem = NSMenuItem(title: "Used", action: Selector("setWindowVisible:"), keyEquivalent: "")
+    var menuFreeItem : NSMenuItem = NSMenuItem(title: "Free", action: Selector("setWindowVisible:"), keyEquivalent: "")
+    var menuExitItem: NSMenuItem = NSMenuItem(title: "Quit", action: Selector("exitNow"), keyEquivalent: "")
     
     // let statusItem = NSStatusBar.systemStatusBar().statusItemWithLength(-2)
 
     func applicationDidFinishLaunching(aNotification: NSNotification?) {
-        let icon = NSImage(named: "menuIcon")
-        icon.setTemplate(true)
-        
-        // statusItem.image = icon
-        // statusItem.menu = statusMenu
         // Add statusBarItem
         statusBarItem = statusBar.statusItemWithLength(-1)
         statusBarItem.menu = menu
-        statusBarItem.title = "Memory"
-        
-        // Add menuItem to menu
-        menuItem.title = "Used"
-        menuItem.action = Selector("setWindowVisible:")
-        menuItem.keyEquivalent = ""
-        menu.addItem(menuItem)
+
+        // Add Menu Items
+        menu.addItem(menuUsedItem)
+        menu.addItem(menuFreeItem)
+        menu.addItem(NSMenuItem.separatorItem())
+        menu.addItem(menuExitItem)
         
         // Create a scheduled timer to run `refreshValues` every 2 seconds
         var timer = NSTimer.scheduledTimerWithTimeInterval(2, target: self, selector: Selector("refreshValues"), userInfo: nil, repeats: true)
@@ -47,8 +43,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let buildTask = NSTask()
         let dir = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] as String
 
-        var error:NSError?
-        var myDict: NSDictionary?
         if let path = NSBundle.mainBundle().pathForResource("lookup",ofType: "sh") {
             let lookupTask = NSTask()
             let pipe = NSPipe()
@@ -64,12 +58,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 response.free = tmp[1] as String
             }
         }
-        println(1)
-        statusBarItem.title = "\(response.used) Used"
+        
+        let usedInGb = NSString(format: "%.2f", NSString(string: response.used).doubleValue / 1024 )
+        let freeInGb = NSString(format: "%.2f", NSString(string: response.free).doubleValue / 1024 )
+        statusBarItem.title = "\(usedInGb)GB Used"
+        menuUsedItem.title = "\(usedInGb)GB Used"
+        menuFreeItem.title = "\(freeInGb)GB Free"
     }
  
     func setWindowVisible(sender: AnyObject){
         self.window!.orderFront(self)
+    }
+    
+    func exitNow() {
+        NSApplication.sharedApplication().terminate(self)
     }
 }
 
